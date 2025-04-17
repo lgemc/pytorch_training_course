@@ -21,7 +21,7 @@ class TestTrain(unittest.TestCase):
         train(model, self.train_data, self.test_data, device=device, batch_size=256)
 
         # torch.save(model.state_dict(), "model.pth")
-        # self.assertTrue(os.path.exists("model.pth"))
+        # :self.assertTrue(os.path.exists("model.pth"))
 
     def test_eval(self):
         model = Model(hidden_size=36)
