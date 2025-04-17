@@ -1,40 +1,100 @@
-## MNIST: a model
+from torch.utils.data import DataLoader
 
-### Pytorch models
+## Torch training
 
-First of all, pytorch models inherits from `torch.Module` class, which has the next methods:
+Torch is a library rather than a framework, so its idiomatic way to define things are functions, training pipeline 
+is not the exception.
 
-- __init__(...) # Most of the time here we have as input: input_size, hidden_size, dropout, num classes etc
--- Also init method defines all the module architecture
-- forward(self, x) # This method executes the forward pass method
-
-Here we have an example:
+So, evaluate is a function that receives a model and perform the forward-backward process based on input data
 
 ```python
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
-# Define the model
-class SimpleClassifier(nn.Module):
-    def __init__(self, input_size, hidden_size, num_classes):
-        super(SimpleClassifier, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)  # First fully connected layer
-        self.fc2 = nn.Linear(hidden_size, num_classes) # Output layer
+def evaluate(
+        model: torch.Module, train_dataset: torch.utils.data.Dataset, test_dataset=torch.utils.data.Dataset,
+        epochs: int=50, learning_rate=0.0001, device="cpu",
+        batch_size=32,
+):
+    pass
+```
 
-    def forward(self, x):
-        x = F.relu(self.fc1(x))  # Activation after first layer
-        x = self.fc2(x)          # Output layer (logits)
-        return x
+## Data loader
 
-# Instantiate the model
-input_size = 20      # for example, 20 input features
-hidden_size = 64     # size of the hidden layer
-num_classes = 3      # number of output classes
+In order to perform a training process over a hole dataset is recommended to split it into batches 
+in order to have a more stable training:
 
-model = SimpleClassifier(input_size, hidden_size, num_classes)
+```python
+from torch.utils.data import DataLoader
 
-# Print model architecture
-print(model)
- 
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=batch_size)
+```
+
+## Optimizer and loss function
+
+Depending on your task you should select the proper optimizer and loss function, for example for classification tasks
+one of the best loss functions is `torch.nn.CrossEntropyLoss()`, and a stable optimizer is adam `torch.optim.Adam(model.parameters(), lr=learning_rate)`
+
+## The evaluation method
+
+Here you should perform a forward pass over the validation dataset and compare predictions with real values
+in order to calculate the metric that you want, for example accuracy:
+
+```python
+import torch 
+
+def evaluate(
+        model: torch.nn.Module,
+        test_loader: torch.utils.data.DataLoader,
+        device="cpu",
+):
+    model.eval()
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for inputs, labels in test_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+
+            outputs = model(inputs)
+
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    return 100 * correct / total
+```
+
+## The train loop
+Then you should iterate per each epoch, training per batch calculating each epoch the test and validation loss
+
+```python
+    for epoch in range(epochs):
+        model.train()
+
+        running_loss = 0.0
+        correct = 0
+        total = 0
+
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+        train_acc = 100 * correct / total
+        train_loss = running_loss/len(train_loader)
+        test_acc = evaluate(model, test_loader, device)
+
+        print(f"Epoch [{epoch+1}/{epochs}] "
+              f"Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}% | Test Acc: {test_acc:.2f}%")
 ```
