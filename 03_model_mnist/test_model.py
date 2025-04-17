@@ -30,6 +30,6 @@ class TestDataset(unittest.TestCase):
         x, y = self.test[0]
         result = model(x)
         print_image_as_char(x, 28, 28)
-        self.assertEqual(9, len(result))
+        self.assertEqual(10, len(result))
         result_number = torch.argmax(result)
         print(f"Real y: {y}, predicted y: {result_number}") # the model is not trained, so the result may be incorrect or not

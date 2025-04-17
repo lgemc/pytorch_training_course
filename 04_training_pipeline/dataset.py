@@ -37,7 +37,7 @@ class MNIST(Dataset):
 
         images_data = file.read(num_images * image_width * image_height)
 
-        images = torch.tensor(list(images_data), dtype=torch.uint8)
+        images = torch.tensor(list(images_data), dtype=torch.float32) / 255 # normalized data
 
         file.close()
 
@@ -58,7 +58,7 @@ class MNIST(Dataset):
 
         file.close()
 
-        return torch.tensor(labels, dtype=torch.int32)
+        return torch.tensor(labels, dtype=torch.long)
 
     def __len__(self):
         return len(self.data)
