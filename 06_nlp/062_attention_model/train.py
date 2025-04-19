@@ -6,20 +6,23 @@ def evaluate(
         device="cpu",
 ):
     model.eval()
-    correct = 0
-    total = 0
+
+    total_loss = 0
+    num_iter = 0
+
+    loss = torch.nn.CrossEntropyLoss()
 
     with torch.no_grad():
-        for inputs, labels in test_loader:
-            inputs, labels = inputs.to(device), labels.to(device)
+        for x, y in test_loader:
+            num_iter += 1
+            x, y = x.to(device), y.to(device)
 
-            outputs = model(inputs)
+            outputs = model(x)
+            loss_value = loss(outputs, y)
 
-            _, predicted = torch.max(outputs, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            total_loss += loss_value.item() / len(test_loader)
 
-    return 100 * correct / total
+    return total_loss / num_iter
 
 def train(
         model,
@@ -41,7 +44,9 @@ def train(
     for epoch in range(epochs):
         model.train()
         total_loss = 0  # Reset total_loss for the current epoch
+        num_iter = 0
         for x, y in train_loader:
+            num_iter += 1
             x, y = x.to(device), y.to(device)
             optim.zero_grad()
             out = model(x)
@@ -51,8 +56,8 @@ def train(
             loss_value.backward()
             optim.step()
 
+        eval_loss = evaluate(model, test_loader, device)
+        print(f"Epoch {epoch}, train loss: {total_loss / num_iter}, eval loss: {eval_loss}")
 
-        print(f"Epoch {epoch}, train loss: {total_loss/len(train_loader)}:.4f")
-        # evaluate(model, test_loader, device)
 
 
