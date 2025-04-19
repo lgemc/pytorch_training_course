@@ -15,5 +15,5 @@ If yes you are going to see a response like `12.6`
 Next you should install requirements (please edit if required to have the correct cuda version)
 
 ```bash
-python -m unittest test_main.py 
+python -m unittest test_binary_operations.py 
 ```

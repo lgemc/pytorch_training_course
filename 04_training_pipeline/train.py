@@ -51,6 +51,7 @@ def train(
 
             optimizer.zero_grad()
             outputs = model(inputs)
+            print(outputs, labels)
             loss = criterion(outputs, labels)
 
             loss.backward()
