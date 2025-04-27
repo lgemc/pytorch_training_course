@@ -16,23 +16,22 @@ blocks_num = 8
 
 class TestFromScratch(unittest.TestCase):
     def test_init(self):
-        dataset = TokenizerDataset(
-            "../data/static/input.txt",
+        train_set = TokenizerDataset(
+            "../data/static/train.txt",
             batch_size_words=140,
             max_token_length=140,
             amount_of_samples=3000,
         )
-        print(len(dataset))
-        #self.assertEqual(79, len(dataset))
 
-        train_set, validation_set = train_test_split_sequential(dataset, 0.2)
+        validation_set = TokenizerDataset(
+            "../data/static/test.txt",
+            batch_size_words=140,
+            max_token_length=140,
+            amount_of_samples=600,
+        )
 
-        #self.assertEqual(451, len(train_set))
-        #self.assertEqual(112, len(validation_set))
-
-        print(dataset._vocab_size,)
         model = Basic(
-            vocab_size=dataset._vocab_size,
+            vocab_size=train_set._vocab_size,
             block_size=block_size,
             model_dim=model_dim,
             heads_num=heads_num,
@@ -53,7 +52,7 @@ class TestFromScratch(unittest.TestCase):
             learning_rate=0.001,
             device=device,
             logging_steps=4,
-            vocab_size=dataset.tokenizer.vocab_size
+            vocab_size=train_set.tokenizer.vocab_size
         )
 
         # store the model

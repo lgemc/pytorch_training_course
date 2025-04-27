@@ -15,7 +15,7 @@ class TestTokenizerDataset(unittest.TestCase):
 
     def test_random_sampler(self):
         dataset = TokenizerDataset(
-            "../static/input.txt",
+            "../static/train.txt",
             batch_size_words=140,
             max_token_length=140,
         )

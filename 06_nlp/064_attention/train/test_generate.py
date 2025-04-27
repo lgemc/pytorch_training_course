@@ -16,7 +16,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 class TestGenerate(unittest.TestCase):
     def test_generate(self):
         dataset = TokenizerDataset(
-            "../data/static/input.txt",
+            "../data/static/train.txt",
                     batch_size_words=140,
                     max_token_length=140,
         )

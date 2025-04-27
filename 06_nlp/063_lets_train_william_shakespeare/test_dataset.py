@@ -4,7 +4,7 @@ from dataset import WilliamDataset
 
 class TestDataset(unittest.TestCase):
     def test_dataset(self):
-        dataset = WilliamDataset("input.txt")
+        dataset = WilliamDataset("train.txt")
         self.assertEqual(len(dataset._vocabulary), 15052)
 
         print([dataset._tokenized[i] for i in range(20)])
