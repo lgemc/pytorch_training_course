@@ -1,0 +1,4 @@
+**/stubs/** filter=lfs diff=lfs merge=lfs -text
+**/*.pth filter=lfs diff=lfs merge=lfs -text
+06_nlp/062_attention_model/dataset.txt filter=lfs diff=lfs merge=lfs -text
+06_nlp/061_basic_operations_dataset/dataset.txt filter=lfs diff=lfs merge=lfs -text
