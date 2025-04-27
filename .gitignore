@@ -6,3 +6,6 @@
 
 # Generated models
 **/*.pth
+
+# Ipynb backups
+**.ipynb_checkpoints**

@@ -10,7 +10,7 @@ class TransformerShakespeare(nn.Module):
         self.E = nn.Embedding(vocab_size, model_dim)
         self.posE = nn.Embedding(block_size, model_dim) # Embedding de posición. Cada posición en el contexto (0 - block_size-1) tiene su propio embedding
         self.ln1 = nn.LayerNorm(model_dim)
-        self.blocks = nn.Sequential(*[Block(heads_num, model_dim, block_size, drop_out=dropout) for _ in range(blocks_num)]) # El bloque se repite el número de veces deseado
+        self.blocks = nn.Sequential(*[Block(heads_num, model_dim, block_size) for _ in range(blocks_num)]) # El bloque se repite el número de veces deseado
         self.dense = nn.Linear(model_dim, vocab_size, bias=False)
 
         # Regularización
