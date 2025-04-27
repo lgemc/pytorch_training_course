@@ -2,10 +2,10 @@ import unittest
 
 import torch
 
-from data.datasets.tokenizer import  TokenizerDataset
-from data.lib.split import train_test_split_sequential
-from models.from_scratch import Basic
+from data.datasets.tokenized import  TokenizedDataset
+from models.from_scratch import TransformerShakespeare
 from from_scratch import train
+from generate import generate_text
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -16,27 +16,28 @@ blocks_num = 8
 
 class TestFromScratch(unittest.TestCase):
     def test_init(self):
-        train_set = TokenizerDataset(
+        train_set = TokenizedDataset(
             "../data/static/train.txt",
             batch_size_words=140,
             max_token_length=140,
             amount_of_samples=3000,
         )
 
-        validation_set = TokenizerDataset(
+        validation_set = TokenizedDataset(
             "../data/static/test.txt",
             batch_size_words=140,
             max_token_length=140,
             amount_of_samples=600,
         )
 
-        model = Basic(
+        model = TransformerShakespeare(
             vocab_size=train_set._vocab_size,
             block_size=block_size,
             model_dim=model_dim,
             heads_num=heads_num,
             blocks_num=blocks_num,
-            device=device
+            dropout=.3,
+            device=device,
         )
 
         x, y = train_set[0]
@@ -56,4 +57,4 @@ class TestFromScratch(unittest.TestCase):
         )
 
         # store the model
-        torch.save(model.state_dict(), "model.pth")
+        torch.save(model.state_dict(), "../../../05_lets_go_hard__sequences/model.pth")

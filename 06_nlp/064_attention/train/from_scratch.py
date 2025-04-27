@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -13,7 +15,7 @@ def train(
         learning_rate: float,
         device: str,
         logging_steps: int,
-) -> nn.Module:
+) -> (nn.Module, List, List):
     model.to(device)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
@@ -23,7 +25,10 @@ def train(
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     model.train()
 
+    test_losses, train_losses = [], []
+
     for epoch in range(epochs):
+        total_train_loss = 0
         print(f"Epoch {epoch + 1}/{epochs}")
         for step, batch in enumerate(train_dataloader):
             x, y = batch
@@ -43,6 +48,9 @@ def train(
 
             if step % logging_steps == 0:
                 print(f"Step {step}, Loss: {loss.item()}, Total steps: {len(train_dataloader)}")
+            total_train_loss += loss.item()
+
+        train_losses.append(total_train_loss/len(train_dataloader))
 
         # Validation
         model.eval()
@@ -59,4 +67,6 @@ def train(
         print(f"Validation Loss: {val_loss}")
         model.train()  # Set back to training mode
 
-    return model
+        test_losses.append(val_loss)
+
+    return model, train_losses, test_losses

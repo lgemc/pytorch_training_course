@@ -1,8 +1,8 @@
 import unittest
 import torch
 
-from models.from_scratch import Basic
-from data.datasets.tokenizer import  TokenizerDataset
+from models.from_scratch import TransformerShakespeare
+from data.datasets.tokenized import  TokenizedDataset
 from generate import generate_text
 
 
@@ -15,13 +15,13 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class TestGenerate(unittest.TestCase):
     def test_generate(self):
-        dataset = TokenizerDataset(
+        dataset = TokenizedDataset(
             "../data/static/train.txt",
                     batch_size_words=140,
                     max_token_length=140,
         )
 
-        model = Basic(
+        model = TransformerShakespeare(
             vocab_size=dataset._vocab_size,
             block_size=block_size,
             model_dim=model_dim,
@@ -30,7 +30,7 @@ class TestGenerate(unittest.TestCase):
             device=device
         )
 
-        model.load_state_dict(torch.load("model.pth"))
+        model.load_state_dict(torch.load("../../../05_lets_go_hard__sequences/model.pth"))
 
         prompt = "ARNALDO:"
 

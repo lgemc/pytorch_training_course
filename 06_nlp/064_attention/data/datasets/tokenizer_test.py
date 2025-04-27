@@ -1,20 +1,20 @@
 import unittest
 
 from torch.utils.data import DataLoader, RandomSampler
-from tokenizer import TokenizerDataset
+from tokenized import TokenizedDataset
 
 class TestTokenizerDataset(unittest.TestCase):
     def test_init(self):
         # Test if the dataset initializes correctly
-        dataset = TokenizerDataset("../static/test.txt", batch_size_chars=20)
-        self.assertIsInstance(dataset, TokenizerDataset)
+        dataset = TokenizedDataset("../static/test.txt", batch_size_chars=20)
+        self.assertIsInstance(dataset, TokenizedDataset)
         self.assertEqual(dataset._vocab_size, 50257)
         print(dataset.tokenized)
         print(dataset._raw_content[:100])
         print(dataset[0])
 
     def test_random_sampler(self):
-        dataset = TokenizerDataset(
+        dataset = TokenizedDataset(
             "../static/train.txt",
             batch_size_words=140,
             max_token_length=140,
@@ -29,5 +29,5 @@ class TestTokenizerDataset(unittest.TestCase):
             for batch in dataloader:
                 x, _ = batch
                 for x_i in x:
-                    continue
                     print(dataset.tokenizer.decode(x_i))
+                    print("__________")

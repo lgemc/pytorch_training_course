@@ -4,17 +4,22 @@ from transformers import GPT2Tokenizer
 import re
 import random
 
-class TokenizerDataset(Dataset):
+class TokenizedDataset(Dataset):
     def __init__(
             self,
             file_name: str,
+            tokenizer=None,
             batch_size_words=100,
             max_token_length=600,
-            amount_of_samples=None
+            amount_of_samples=None,
     ):
         self.batch_size_words = batch_size_words
         self.max_token_length = max_token_length
-        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        if tokenizer is not None:
+            self.tokenizer = tokenizer
+        else:
+            self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
         with open(file_name) as file:
@@ -55,7 +60,6 @@ class TokenizerDataset(Dataset):
                 # Reset for next batch
                 word_count = 0
                 current_batch = []
-
         # Don't forget the last batch
         if current_batch:
             text_batch = ''.join(current_batch)

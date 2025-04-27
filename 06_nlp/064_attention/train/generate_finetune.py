@@ -38,12 +38,7 @@ def generate_text(
     input_tensor = torch.tensor(input_ids).unsqueeze(0).to(device)
 
     # Get the model's block size (maximum sequence length)
-    block_size = None
-    if hasattr(model, "posE"):
-        block_size = model.posE.num_embeddings
-    else:
-        # is gpt model
-        block_size = model.config.n_positions
+    block_size = model.config.n_positions
 
     # Generate tokens one by one
     generated_ids = input_ids.copy()
@@ -54,7 +49,10 @@ def generate_text(
             current_input = input_tensor[:, -block_size:]
 
             # Get model predictions
-            logits = model(current_input)
+            out = model(current_input)
+
+            # Get the logits
+            logits = out.logits
 
             # Focus on the last token's predictions
             next_token_logits = logits[:, -1, :]

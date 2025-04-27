@@ -1,0 +1,14 @@
+@startuml
+Dataset -> TextFile: Read
+activate Dataset
+activate TextFile
+TextFile -> Dataset: Content
+deactivate TextFile
+Dataset -> Dataset: GenerateTextSlices
+Dataset -> GPTTokenizer: Tokenize
+activate GPTTokenizer
+GPTTokenizer -> Dataset: Tokens
+deactivate GPTTokenizer
+Dataset -> Dataset: ArtificialIndexGeneration
+Dataset -> Dataset: KeepVectors
+@enduml

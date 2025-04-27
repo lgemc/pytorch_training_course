@@ -3,18 +3,18 @@ from torch import nn
 
 from architecture.organisms.transformer.block import Block
 
-class Basic(nn.Module):
-    def __init__(self, model_dim, vocab_size, block_size, blocks_num, heads_num, device="cpu") -> None:
+class TransformerShakespeare(nn.Module):
+    def __init__(self, model_dim, vocab_size, block_size, blocks_num, heads_num, dropout=.1, device="cpu") -> None:
         super().__init__()
         self._device = device
         self.E = nn.Embedding(vocab_size, model_dim)
         self.posE = nn.Embedding(block_size, model_dim) # Embedding de posición. Cada posición en el contexto (0 - block_size-1) tiene su propio embedding
         self.ln1 = nn.LayerNorm(model_dim)
-        self.blocks = nn.Sequential(*[Block(heads_num, model_dim, block_size) for _ in range(blocks_num)]) # El bloque se repite el número de veces deseado
+        self.blocks = nn.Sequential(*[Block(heads_num, model_dim, block_size, drop_out=dropout) for _ in range(blocks_num)]) # El bloque se repite el número de veces deseado
         self.dense = nn.Linear(model_dim, vocab_size, bias=False)
 
         # Regularización
-        self.drop1 = nn.Dropout(0.1)
+        self.drop1 = nn.Dropout(dropout)
 
     def forward(self, x): # x: [batch_size, block_size]
         emb1 = self.E(x) # [batch_size, block_size, emb_dim]
