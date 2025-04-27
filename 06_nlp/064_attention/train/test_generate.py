@@ -8,8 +8,8 @@ from generate import generate_text
 
 block_size = 140
 model_dim = 64
-heads_num = 4
-blocks_num = 3
+heads_num = 8
+blocks_num = 8
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 

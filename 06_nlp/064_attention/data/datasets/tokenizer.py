@@ -2,10 +2,16 @@ import torch
 from torch.utils.data import Dataset
 from transformers import GPT2Tokenizer
 import re
-
+import random
 
 class TokenizerDataset(Dataset):
-    def __init__(self, file_name: str, batch_size_words=100, max_token_length=600):
+    def __init__(
+            self,
+            file_name: str,
+            batch_size_words=100,
+            max_token_length=600,
+            amount_of_samples=None
+    ):
         self.batch_size_words = batch_size_words
         self.max_token_length = max_token_length
         self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
@@ -36,7 +42,6 @@ class TokenizerDataset(Dataset):
             # When we have enough words, tokenize the batch
             if word_count >= self.batch_size_words:
                 text_batch = ''.join(current_batch)
-                print(f"text batch: {text_batch}")
 
                 # Tokenize the batch
                 tokens = self.tokenizer.encode(text_batch)
@@ -63,7 +68,6 @@ class TokenizerDataset(Dataset):
 
         self._vocab_size = len(self.tokenizer)
 
-        # Create consecutive sequences instead of random sampling
         self._indexes = []
         for i in range(0, len(self.tokenized) - self.max_token_length, self.max_token_length):
             self._indexes.append(i)
@@ -73,6 +77,16 @@ class TokenizerDataset(Dataset):
             last_valid_start = len(self.tokenized) - self.max_token_length
             if last_valid_start not in self._indexes:
                 self._indexes.append(last_valid_start)
+
+        if amount_of_samples is not None:
+            if amount_of_samples < len(self._indexes):
+                pass
+            else:
+                for i in range(len(self._indexes), amount_of_samples):
+                    self._indexes.append(random.randint(0, len(self.tokenized) - self.max_token_length))
+
+        # Shuffle the indexes
+        random.shuffle(self._indexes)
 
         self._num_sequences = len(self._indexes)
 
@@ -106,17 +120,3 @@ class TokenizerDataset(Dataset):
     @property
     def vocab_size(self):
         return self._vocab_size
-
-    def debug_sample(self, idx):
-        """Debug method to check what text is being used"""
-        start_idx = self._indexes[idx]
-        end_idx = min(start_idx + self.max_token_length, len(self.tokenized))
-
-        tokens = self.tokenized[start_idx:end_idx]
-        decoded_text = self.tokenizer.decode(tokens)
-
-        print(f"Sample {idx}:")
-        print(f"Token count: {len(tokens)}")
-        print(f"Decoded text: {decoded_text}")
-
-        return decoded_text

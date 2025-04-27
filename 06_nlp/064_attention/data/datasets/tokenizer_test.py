@@ -15,10 +15,11 @@ class TestTokenizerDataset(unittest.TestCase):
 
     def test_random_sampler(self):
         dataset = TokenizerDataset(
-            "../static/test.txt",
-            batch_size_words=5,
-            max_token_length=5,
+            "../static/input.txt",
+            batch_size_words=140,
+            max_token_length=140,
         )
+        print(dataset._indexes)
         dataloader = DataLoader(dataset, batch_size=2, sampler=RandomSampler(dataset))
         print(f"Dataset size: {len(dataset)}")
 
@@ -28,4 +29,5 @@ class TestTokenizerDataset(unittest.TestCase):
             for batch in dataloader:
                 x, _ = batch
                 for x_i in x:
+                    continue
                     print(dataset.tokenizer.decode(x_i))

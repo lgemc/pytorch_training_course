@@ -11,8 +11,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 block_size = 140
 model_dim = 64
-heads_num = 4
-blocks_num = 3
+heads_num = 8
+blocks_num = 8
 
 class TestFromScratch(unittest.TestCase):
     def test_init(self):
@@ -20,8 +20,9 @@ class TestFromScratch(unittest.TestCase):
             "../data/static/input.txt",
             batch_size_words=140,
             max_token_length=140,
+            amount_of_samples=3000,
         )
-        print(len(dataset[0]))
+        print(len(dataset))
         #self.assertEqual(79, len(dataset))
 
         train_set, validation_set = train_test_split_sequential(dataset, 0.2)
@@ -47,9 +48,9 @@ class TestFromScratch(unittest.TestCase):
             model,
             train_dataset=train_set,
             val_dataset=validation_set,
-            epochs=10,
-            batch_size=block_size,
-            learning_rate=0.0001,
+            epochs=30,
+            batch_size=32,
+            learning_rate=0.001,
             device=device,
             logging_steps=4,
             vocab_size=dataset.tokenizer.vocab_size
