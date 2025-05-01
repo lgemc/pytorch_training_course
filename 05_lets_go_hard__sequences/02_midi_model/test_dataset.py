@@ -28,6 +28,7 @@ class TestDataset(unittest.TestCase):
         self.assertEqual(5, len(x["pitch"]))
 
         first_ngram = dataset._ngrams[0]
+        self.assertEqual(5, len(first_ngram[0]))
         self.assertEqual(70, first_ngram[1].pitch)
 
         self.assertEqual(y["step"], first_ngram[1].step)
