@@ -13,8 +13,9 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class TestPredict(unittest.TestCase):
     def test_predict(self):
+        ngram_size = 5
         dataset = MIDIDataset(chopin_folder)
-        seed = dataset._notes[0]
+        seed = dataset._notes[:ngram_size]
 
         model = MIDIModel(
             pitch_vocab_size=128,
@@ -31,12 +32,12 @@ class TestPredict(unittest.TestCase):
 
         notes = predict(
             model=model,
-            notes_amount=10,
+            notes_amount=30,
             device=device,
             seed=seed
         )
 
-        self.assertEqual(len(notes), 11)
+        self.assertEqual(len(notes), len(seed) + 30)
 
         write_midi(notes, "test.mid")
 

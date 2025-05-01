@@ -26,8 +26,42 @@ def note_to_tensor(
         "velocity": torch.tensor([note.velocity], dtype=torch.long),
     }
 
+def notes_to_tensor(
+        notes,
+        step_max: float,
+        step_min: float,
+        duration_max: float,
+        duration_min: float,
+        device = "cpu",
+) -> dict:
+    """
+    Convert a list of pretty_midi.Note objects to a tensor.
+    """
+    steps = []
+    durations = []
+    pitches = []
+    velocities = []
+
+    for note in notes:
+        step = note.start - (notes[0].start if len(notes) > 1 else 0)
+        duration = note.end - note.start
+        step = (step - step_min) / (step_max - step_min)
+        duration = (duration - duration_min) / (duration_max - duration_min)
+
+        steps.append(step)
+        durations.append(duration)
+        pitches.append(note.pitch)
+        velocities.append(note.velocity)
+
+    return {
+        "step": torch.tensor(steps, dtype=torch.float32).to(device),
+        "duration": torch.tensor(durations, dtype=torch.float32).to(device),
+        "pitch": torch.tensor(pitches, dtype=torch.long).to(device),
+        "velocity": torch.tensor(velocities, dtype=torch.long).to(device),
+    }
+
 def tensor_to_note(
-        tensor: dict,
+        out: dict,
         step_max: float,
         step_min: float,
         duration_max: float,
@@ -37,10 +71,12 @@ def tensor_to_note(
     """
     Convert a tensor to a pretty_midi.Note object.
     """
-    step = tensor["step"].item() * (step_max - step_min) + step_min
-    duration = tensor["duration"].item() * (duration_max - duration_min) + duration_min
-    pitch = tensor["pitch"].item()
-    velocity = tensor["velocity"].item()
+    pitch = torch.argmax(out["pitch"], dim=-1)
+    velocity = torch.argmax(out["velocity"], dim=-1)
+    duration = out["duration"].squeeze(-1).item()
+    duration = duration * (duration_max - duration_min) + duration_min
+    step = out["step"].squeeze(-1).item()
+    step = step * (step_max - step_min) + step_min
 
     start = (prev_note.end if prev_note else 0) + step
     end = start + duration
@@ -51,7 +87,7 @@ def tensor_to_note(
 
 def predict(
         model : torch.nn.Module,
-        seed: pretty_midi.Note,
+        seed: List[pretty_midi.Note],
         notes_amount : int,
         device : str,
 ) -> List[pretty_midi.Note]:
@@ -59,9 +95,9 @@ def predict(
 
     model.eval()
 
-    notes = [seed]
+    notes = seed.copy()
 
-    seed = note_to_tensor(
+    seed = notes_to_tensor(
         seed,
         step_max=model.step_max,
         step_min=model.step_min,
@@ -69,42 +105,35 @@ def predict(
         duration_min=model.duration_min
     )
 
+
     with torch.no_grad():
         for i in range(notes_amount):
             seed = {k: v.to(device) for k, v in seed.items()}
+
+            print(seed)
+
             out = model(seed)
+
             pitch = torch.argmax(out["pitch"], dim=-1)
             velocity = torch.argmax(out["velocity"], dim=-1)
-            duration = out["duration"].squeeze(-1).item()
+            # Update the seed for the next iteration, moving the window, step and other are torch tensor, also output
+            seed = {
+                "step": torch.cat((seed["step"][1:], out["step"])),
+                "duration":  torch.cat((seed["duration"][1:], out["duration"])),
+                "pitch": torch.cat((seed["pitch"][1:], pitch.unsqueeze(-1))),
+                "velocity": torch.cat((seed["velocity"][1:],velocity.unsqueeze(-1))),
+            }
 
-            print(f"pitch: {pitch.item()}, velocity: {velocity.item()}, duration: {duration}")
-
-            # it should start from the last note
-            notes.append(
-                tensor_to_note(
-                    {
-                        "step": seed["step"],
-                        "duration": torch.tensor([duration], dtype=torch.float32),
-                        "pitch": pitch,
-                        "velocity": velocity,
-                    },
+            note = tensor_to_note(
+                    out,
                     step_max=model.step_max,
                     step_min=model.step_min,
                     duration_max=model.duration_max,
                     duration_min=model.duration_min,
                     prev_note=notes[-1]
-                )
             )
 
-            # update the seed for the next iteration
-            seed = note_to_tensor(
-                notes[-1],
-                step_max=model.step_max,
-                step_min=model.step_min,
-                duration_max=model.duration_max,
-                duration_min=model.duration_min,
-                prev_note=notes[-2] if len(notes) > 1 else None
-            )
+            notes.append(note)
 
     return notes
 
