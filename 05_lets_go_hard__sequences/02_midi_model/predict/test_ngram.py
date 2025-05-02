@@ -2,10 +2,10 @@ import unittest
 
 import torch
 
-from dataset import MIDIDataset
-from model import MIDIModel
-from predict import predict
-from lib import write_midi
+from data.dataset import MIDIDataset
+from models.model import MIDIModel
+from predict.predict import predict
+from shared.midi.midi import write_midi
 
 chopin_folder = "../stubs/chopin"
 
@@ -28,7 +28,7 @@ class TestPredict(unittest.TestCase):
         )
 
         model.eval()
-        model.load_state_dict(torch.load("model.pth"))
+        model.load_state_dict(torch.load("../model.pth"))
 
         notes = predict(
             model=model,

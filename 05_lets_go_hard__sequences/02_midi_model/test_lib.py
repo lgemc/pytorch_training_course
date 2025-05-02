@@ -1,5 +1,5 @@
 import unittest
-from lib import build_ngrams
+from data.lib import build_ngrams
 
 class TestLib(unittest.TestCase):
     def test_ngrams_2_grams(self):

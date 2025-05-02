@@ -1,6 +1,6 @@
 import unittest
-from model import MIDIModel
-from dataset import MIDIDataset
+from models.model import MIDIModel
+from data.dataset import MIDIDataset
 
 midis_folder = "../stubs/chopin"
 

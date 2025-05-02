@@ -1,8 +1,8 @@
 import unittest
 import torch
 
-from model import MIDIModel
-from dataset import MIDIDataset
+from models.model import MIDIModel
+from data.dataset import MIDIDataset
 from train import train_test_split_sequential, train
 
 notes_folder = "../stubs/chopin"
@@ -40,4 +40,4 @@ class TestTrain(unittest.TestCase):
             device=device,
         )
 
-        torch.save(model.state_dict(), "model.pth")
+        torch.save(model.state_dict(), "../model.pth")
