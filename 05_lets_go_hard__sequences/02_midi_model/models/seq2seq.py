@@ -11,6 +11,8 @@ class MusicSeq2SeqModel(nn.Module):
             dropout=0.2,
             pitch_vocab_size=128,
             velocity_vocab_size=128,
+            pitch_embed_dim=128,
+            velocity_embed_dim=128,
             step_input_dim=1,
             dropout_p=0.5,
             step_max=0,
@@ -19,9 +21,12 @@ class MusicSeq2SeqModel(nn.Module):
             duration_min=0,
     ):
         super(MusicSeq2SeqModel, self).__init__()
-        self.velocity_embed = torch.nn.Embedding(128, velocity_vocab_size)
-        self.pitch_embed = torch.nn.Embedding(128, pitch_vocab_size)
-        self.input_dim = step_input_dim + pitch_vocab_size + velocity_vocab_size + 1  # +1 for duration
+        self.velocity_embed = torch.nn.Embedding(velocity_vocab_size, velocity_embed_dim)
+        self.pitch_embed = torch.nn.Embedding(pitch_vocab_size, pitch_embed_dim)
+        self.pitch_norm = torch.nn.LayerNorm(pitch_embed_dim)
+        self.velocity_norm = torch.nn.LayerNorm(velocity_embed_dim)
+
+        self.input_dim = step_input_dim + pitch_embed_dim + velocity_embed_dim + 1# + 1 (for duration)
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
 
@@ -57,6 +62,8 @@ class MusicSeq2SeqModel(nn.Module):
     def forward(self, x, teacher_forcing_ratio=0.5):
         pitch_embed = self.pitch_embed(x[:, :, PITCH_COLUMN].to(torch.long))
         velocity_embed = self.velocity_embed(x[:, :, VELOCITY_COLUMN].to(torch.long))
+        pitch_embed = self.pitch_norm(pitch_embed)
+        velocity_embed = self.velocity_norm(velocity_embed)
         step = x[:, :, STEP_COLUMN].unsqueeze(-1)
         duration = x[:, :, DURATION_COLUMN].unsqueeze(-1)
         batch_size = x.size(0)

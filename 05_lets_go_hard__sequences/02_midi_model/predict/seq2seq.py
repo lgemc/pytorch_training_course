@@ -21,14 +21,13 @@ def predict(model, notes_amount, device, seed):
 
         for _ in range(notes_amount):
             # Get model output
-            outputs = model(input_sequence)
+            outputs = model(input_sequence, teacher_forcing_ratio=0.0)
 
-            # Extract the last prediction for each attribute
+            # Extract individual predictions
             pitch_pred = outputs['pitch'][:, -1, :]
             velocity_pred = outputs['velocity'][:, -1, :]
             step_pred = outputs['step'][:, -1, :]
             duration_pred = outputs['duration'][:, -1, :]
-
             # Convert predictions to values
             pitch = torch.argmax(pitch_pred, dim=-1).item()
             velocity = torch.argmax(velocity_pred, dim=-1).item()
@@ -41,14 +40,13 @@ def predict(model, notes_amount, device, seed):
             # Ensure duration is positive
             duration = max(0.01, duration)
 
-            # Create a new note
+            # Create the
             new_note = np.zeros_like(seed[0])
             new_note[PITCH_COLUMN] = pitch
             new_note[VELOCITY_COLUMN] = velocity
             new_note[STEP_COLUMN] = step
             new_note[DURATION_COLUMN] = duration
 
-            print("new_note", new_note)
 
             # Add the new note to our sequence
             generated_sequence = np.vstack([generated_sequence, [new_note]])
@@ -58,7 +56,6 @@ def predict(model, notes_amount, device, seed):
 
             input_sequence = torch.cat((input_sequence[:, 1:, :], last_note), dim=1)
             input_sequence = input_sequence.to(device)
-            print("input_sequence", input_sequence)
 
     return generated_sequence
 

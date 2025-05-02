@@ -15,11 +15,15 @@ class TestPredict(unittest.TestCase):
     def test_predict(self):
         sequence_size = 5
         dataset = MIDIDataset(chopin_folder, sequence_size=sequence_size)
-        seed = dataset[50][0]
+        seed = dataset[0][0]
 
         model = MusicSeq2SeqModel(
+            hidden_dim=128,
+            num_layers=8,
             pitch_vocab_size=128,
             velocity_vocab_size=128,
+            pitch_embed_dim=32,
+            velocity_embed_dim=32,
             step_input_dim=1,
             step_max=dataset.normalized.max_step,
             step_min=dataset.normalized.min_step,

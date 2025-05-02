@@ -32,6 +32,8 @@ class Base:
             for (instrument_idx, instrument) in enumerate(midi.instruments):
                 for (i, note) in enumerate(instrument.notes):
                     step = note.start - (instrument.notes[i - 1].start if i > 0 else 0)
+                    if step < 0:
+                        step = 0.1  # Avoid negative steps
                     pitch = note.pitch
                     velocity = note.velocity
                     duration = note.end - note.start
