@@ -5,7 +5,27 @@ import pretty_midi
 from data.sequences import PITCH_COLUMN, VELOCITY_COLUMN, DURATION_COLUMN, STEP_COLUMN
 
 
-def predict(model, notes_amount, device, seed):
+def sample_with_temperature(logits, temperature=1.0):
+    """
+    Sample from a distribution with temperature control.
+    Higher temperature = more randomness/diversity.
+    Lower temperature = more deterministic/conservative.
+    """
+    if temperature == 0:
+        # If temperature is 0, just return the argmax
+        return torch.argmax(logits, dim=-1)
+
+    # Apply temperature scaling
+    scaled_logits = logits / temperature
+
+    # Convert to probabilities
+    probs = F.softmax(scaled_logits, dim=-1)
+
+    # Sample from the distribution
+    return torch.multinomial(probs, 1).squeeze(-1)
+
+
+def predict(model, notes_amount, device, seed, temperature=1.0):
     model.to(device)
     model.eval()
 
@@ -28,11 +48,21 @@ def predict(model, notes_amount, device, seed):
             velocity_pred = outputs['velocity'][:, -1, :]
             step_pred = outputs['step'][:, -1, :]
             duration_pred = outputs['duration'][:, -1, :]
-            # Convert predictions to values
-            pitch = torch.argmax(pitch_pred, dim=-1).item()
-            velocity = torch.argmax(velocity_pred, dim=-1).item()
+
+            # Use temperature sampling for categorical outputs
+            pitch = sample_with_temperature(pitch_pred, temperature).item()
+            velocity = sample_with_temperature(velocity_pred, temperature).item()
+
+            # For continuous outputs, we can add some noise scaled by temperature
             step = step_pred.squeeze(-1).item()
+            if temperature > 0:
+                # Add scaled noise for continuous values
+                step += np.random.normal(0, 0.1 * temperature)
+
             duration = duration_pred.squeeze(-1).item()
+            if temperature > 0:
+                # Add scaled noise for continuous values
+                duration += np.random.normal(0, 0.1 * temperature)
 
             # Ensure step is not negative
             step = max(0, step)
@@ -40,13 +70,12 @@ def predict(model, notes_amount, device, seed):
             # Ensure duration is positive
             duration = max(0.01, duration)
 
-            # Create the
+            # Create the new note
             new_note = np.zeros_like(seed[0])
             new_note[PITCH_COLUMN] = pitch
             new_note[VELOCITY_COLUMN] = velocity
             new_note[STEP_COLUMN] = step
             new_note[DURATION_COLUMN] = duration
-
 
             # Add the new note to our sequence
             generated_sequence = np.vstack([generated_sequence, [new_note]])
@@ -58,6 +87,7 @@ def predict(model, notes_amount, device, seed):
             input_sequence = input_sequence.to(device)
 
     return generated_sequence
+
 
 def items_to_notes(items, step_max=None, step_min=None, duration_max=None, duration_min=None):
     """
@@ -77,7 +107,7 @@ def items_to_notes(items, step_max=None, step_min=None, duration_max=None, durat
         duration = durations[i].item()
         step = steps[i].item()
 
-        start = 0 if i == 0 else notes[-1].end + step
+        start = 0 if i == 0 else notes[-1].end + step / 4
         end = start + duration
 
         note = pretty_midi.Note(
